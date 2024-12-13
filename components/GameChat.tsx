@@ -41,9 +41,6 @@ export default function GameChat() {
     setInput('');
     setIsLoading(true);
 
-    // Add user message to chat
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -55,29 +52,25 @@ export default function GameChat() {
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`API error: ${response.status} - ${errorData}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('API Response:', data); // Add this for debugging
-
-      // Update game state if it exists in the response
+      
       if (data.gameState) {
         setGameState(data.gameState);
       }
 
-      // Add game response to chat
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: data.message || data.narrative || 'No response received'
+        content: data.narrative || 'No response received'
       }]);
 
     } catch (error) {
       console.error('Detailed error:', error);
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: `Error: ${error.message || 'Something went wrong. Please try again.'}`
+        content: `Error: ${error instanceof Error ? error.message : 'Something went wrong. Please try again.'}`
       }]);
     } finally {
       setIsLoading(false);
