@@ -41,6 +41,8 @@ export default function GameChat() {
     setInput('');
     setIsLoading(true);
 
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
