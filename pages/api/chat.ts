@@ -13,38 +13,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { message, gameState } = req.body;
 
-    const systemPrompt = `You are running an interactive fantasy text adventure game.
-    Current game state: ${JSON.stringify(gameState)}
-    
-    Rules:
-    1. Respond to the player's actions with vivid, engaging descriptions
-    2. Keep track of player health, inventory, and important story decisions
-    3. Create challenging situations but make them possible to overcome with creativity
-    4. If player reaches a game over, offer to restart
-    5. Keep responses concise but descriptive
-    6. React naturally to anything the player types to do`;
-
     const response = await anthropic.messages.create({
-      system: systemPrompt,
-      messages: [
-        { role: "user", content: message }
-      ],
       model: "claude-3-sonnet-20240229",
       max_tokens: 1000,
+      system: `You are running an interactive fantasy text adventure game. 
+      Current game state: ${JSON.stringify(gameState)}
+      
+      Respond in character as a fantasy game master. Keep responses under 200 words.
+      Track and update the player's:
+      - Health (decrease if they take risks)
+      - Inventory (add/remove items as appropriate)
+      - Location (change based on movement)
+      - Quest progress (update based on actions)`,
+      messages: [{ role: "user", content: message }],
     });
 
-    // Access the content from the response
-    const narrativeContent = response.content[0].text;
+    // Get the AI's response
+    const aiResponse = response.content[0].text;
 
-    const gameResponse = {
-      narrative: narrativeContent,
-      gameState: {
-        ...gameState, // Preserve existing game state
-        // Update specific properties based on the response if needed
-      }
+    // You could add logic here to parse the AI response and update game state
+    const updatedGameState = {
+      ...gameState,
+      // Add logic to update state based on AI response
     };
 
-    return res.status(200).json(gameResponse);
+    return res.status(200).json({
+      narrative: aiResponse,
+      gameState: updatedGameState
+    });
+
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).json({ 
